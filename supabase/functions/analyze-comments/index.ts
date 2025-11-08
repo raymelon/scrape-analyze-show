@@ -1,6 +1,32 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.80.0";
-import { ApifyComment, AnalysisResult } from "../../src/types/instagram.ts";
+
+interface ApifyComment {
+  type: string;
+  id: string;
+  userId: string;
+  message: string;
+  createdAt: string;
+  likeCount: number;
+  replyCount: number;
+  user: {
+    id: string;
+    username: string;
+    fullName: string;
+    isVerified: boolean;
+    isPrivate: boolean;
+    profilePicUrl: string;
+  };
+  isRanked: boolean;
+}
+
+interface AnalysisResult {
+  sentiment: "positive" | "negative" | "neutral";
+  summary: string;
+  keywords: string[];
+  category: string;
+  confidence_score: number;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +97,9 @@ serve(async (req) => {
     if (!actorRunResponse.ok) {
       const errorText = await actorRunResponse.text();
       console.error("Apify actor run failed:", errorText);
+      if (errorText.toLowerCase().includes("plan") || errorText.toLowerCase().includes("subscription") || errorText.toLowerCase().includes("upgrade")) {
+        throw new Error("Apify paid plan required: This actor requires a paid Apify plan to run. Please upgrade your account or use the local scraper instead.");
+      }
       throw new Error(`Apify actor run failed: ${actorRunResponse.statusText}`);
     }
 
@@ -119,148 +148,77 @@ serve(async (req) => {
     // Process each comment
     for (const comment of comments) {
       if (!comment.message) continue;
+      // Insert raw comment
+      const { data: insertedComment, error: insertError } = await supabase
+        .from("instagram_comments")
+        .insert({
+          source: postUrl,
+          content: comment.message,
+          created_at: comment.createdAt || new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-      try {
-        // Insert raw comment
-        const { data: insertedComment, error: insertError } = await supabase
-          .from("instagram_comments")
-          .insert({
-            source: postUrl,
-            content: comment.message,
-            created_at: comment.createdAt || new Date().toISOString(),
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error("Insert error:", insertError);
-          continue;
-        }
-
-        console.log(`Analyzing comment ${insertedComment.id}...`);
-
-        // Call OpenAI for analysis
-        const prompt = ANALYSIS_PROMPT.replace(
-          "{TEXT_TO_ANALYZE}",
-          comment.message
-        );
-
-        const openaiResponse = await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "gpt-5-mini",
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "You are a professional text analyst. Always respond with valid JSON only.",
-                },
-                { role: "user", content: prompt },
-              ],
-              temperature: 1,
-              max_completion_tokens: 500,
-            }),
-          }
-        );
-
-        if (!openaiResponse.ok) {
-          const errorText = await openaiResponse.text();
-          console.error("OpenAI error:", errorText);
-          continue;
-        }
-
-        const openaiData = await openaiResponse.json();
-        const analysisText = openaiData.choices[0]?.message?.content;
-
-        if (!analysisText || analysisText.trim() === '') {
-          console.error("OpenAI response is empty or undefined");
-          continue;
-        }
-
-        // Parse JSON response
-        let analysis;
-        try {
-          analysis = JSON.parse(analysisText);
-        } catch (parseError) {
-          console.error("Failed to parse OpenAI response:", analysisText);
-          continue;
-        }
-
-        console.log(`Analyzing comment ${insertedComment.id}...`);
-
-        // Call OpenAI for analysis
-        const prompt = ANALYSIS_PROMPT.replace(
-          "{TEXT_TO_ANALYZE}",
-          comment.text
-        );
-
-        const openaiResponse = await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "You are a professional text analyst. Always respond with valid JSON only.",
-                },
-                { role: "user", content: prompt },
-              ],
-              temperature: 0.7,
-              max_tokens: 500,
-            }),
-          }
-        );
-
-        if (!openaiResponse.ok) {
-          const errorText = await openaiResponse.text();
-          console.error("OpenAI error:", errorText);
-          continue;
-        }
-
-        const openaiData = await openaiResponse.json();
-        const analysisText = openaiData.choices[0].message.content;
-
-        // Parse JSON response
-        let analysis: AnalysisResult;
-        try {
-          analysis = JSON.parse(analysisText);
-        } catch (parseError) {
-          console.error("Failed to parse OpenAI response:", analysisText);
-          continue;
-        }
-
-        // Update comment with analysis
-        const { error: updateError } = await supabase
-          .from("instagram_comments")
-          .update({
-            analysis,
-            analyzed_at: new Date().toISOString(),
-          })
-          .eq("id", insertedComment.id);
-
-        if (updateError) {
-          console.error("Update error:", updateError);
-          continue;
-        }
-
-        processedCount++;
-        console.log(`Successfully analyzed comment ${insertedComment.id}`);
-      } catch (commentError) {
-        console.error("Error processing comment:", commentError);
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        continue;
       }
+
+      console.log(`Analyzing comment ${insertedComment.id}...`);
+
+      // Call OpenAI for analysis
+      const prompt = ANALYSIS_PROMPT.replace(
+        "{TEXT_TO_ANALYZE}",
+        comment.message
+      );
+
+      const openaiResponse = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional text analyst. Always respond with valid JSON only.",
+              },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.7,
+            max_tokens: 500,
+          }),
+        }
+      );
+
+      if (!openaiResponse.ok) {
+        const errorText = await openaiResponse.text();
+        console.error("OpenAI error:", errorText);
+        continue;
+      }
+
+      const openaiData = await openaiResponse.json();
+      const analysisText = openaiData.choices[0]?.message?.content;
+
+      if (!analysisText || analysisText.trim() === '') {
+        console.error("OpenAI response is empty or undefined");
+        continue;
+      }
+
+      // Parse JSON response
+      let analysis;
+      try {
+        analysis = JSON.parse(analysisText);
+      } catch (parseError) {
+        console.error("Failed to parse OpenAI response:", analysisText);
+        continue;
+      }
+
     }
 
     return new Response(
