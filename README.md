@@ -62,7 +62,7 @@ The application:
 
 ### Prerequisites
 
-- Node.js 18+ installed
+- Node.js 22+ installed
 - Supabase account
 - Apify account with API token
 - OpenAI API key

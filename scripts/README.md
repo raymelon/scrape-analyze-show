@@ -4,7 +4,7 @@ This script provides a free alternative to the Supabase Edge Function for users 
 
 ## Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v22 or higher)
 - Apify CLI installed globally: `npm install -g apify-cli`
 - Apify account (free tier works for local development)
 
