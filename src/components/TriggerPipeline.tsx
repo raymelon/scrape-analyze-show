@@ -66,6 +66,7 @@ export const TriggerPipeline = ({ onSuccess }: TriggerPipelineProps) => {
     } catch (error: any) {
       console.error("Pipeline error:", error);
       let description = error.message || "Failed to trigger analysis pipeline";
+      description += ". You are not in paid Apify plan. Use the local pipeline instead.";
       if (error.message?.toLowerCase().includes("apify") && (error.message?.toLowerCase().includes("plan") || error.message?.toLowerCase().includes("subscription"))) {
         description = "This feature requires a paid Apify plan. Please upgrade your Apify account or use the local pipeline instead. Refer to the instructions for running locally.";
       }
@@ -124,7 +125,7 @@ export const TriggerPipeline = ({ onSuccess }: TriggerPipelineProps) => {
              <AlertDescription>
                This runs the pipeline remotely through a Supabase Edge function.<br />
                <strong>Needs a paid Apify plan to work.</strong><br /><br />
-               If you prefer to use Apify Free, run the Local pipeline in your local machine instead. <strong>Refer to the README as to how, or <button onClick={() => setShowInstructions(true)} className="underline text-blue-600 hover:text-blue-800">Click here</button>.</strong>
+               <strong>If you prefer to use Apify Free</strong>, run the Local pipeline in your local machine instead. <strong>Refer to the README as to how, or <button onClick={() => setShowInstructions(true)} className="underline text-blue-600 hover:text-blue-800">Click here</button>.</strong>
              </AlertDescription>
            </Alert>
            <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="flex space-x-4">
