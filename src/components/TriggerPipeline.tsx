@@ -169,7 +169,7 @@ export const TriggerPipeline = ({ onSuccess }: TriggerPipelineProps) => {
         </DialogContent>
       </Dialog>
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-        <DialogContent className="bg-card border-border flex flex-col max-h-[80vh]">
+        <DialogContent className="bg-card border-border flex flex-col max-h-[80vh] max-w-4xl">
           <DialogHeader>
             <DialogTitle>Local Pipeline Setup Instructions</DialogTitle>
             <DialogDescription>
@@ -178,20 +178,26 @@ export const TriggerPipeline = ({ onSuccess }: TriggerPipelineProps) => {
           </DialogHeader>
           <div className="flex-1 overflow-y-auto space-y-4 py-4">
             <div>
-              <h3 className="font-semibold">1. Go to Scripts Folder</h3>
+              <h3 className="font-semibold">1. Download the repository from GitHub</h3>
+              <p className="text-sm">Clone/Download the repository to your local machine.</p>
+              <pre className="bg-secondary p-2 rounded mt-1 text-sm">git clone https://github.com/raymelon/scrape-analyze-show.git</pre>
+              <pre className="bg-secondary p-2 rounded mt-1 text-sm">cd scrape-analyze-show</pre>
+            </div>
+            <div>
+              <h3 className="font-semibold">2. Go to Scripts Folder</h3>
               <p className="text-sm">Navigate to the scripts folder, which contains the <code>local-scraper.ts</code> script.</p>
               <pre className="bg-secondary p-2 rounded mt-1 text-sm">cd scripts</pre>
             </div>
             <div>
-              <h3 className="font-semibold">2. Install Dependencies</h3>
+              <h3 className="font-semibold">3. Install Dependencies</h3>
               <pre className="bg-secondary p-2 rounded mt-1 text-sm">npm install</pre>
             </div>
             <div>
-              <h3 className="font-semibold">3. Build the Code</h3>
+              <h3 className="font-semibold">4. Build the Code</h3>
               <pre className="bg-secondary p-2 rounded mt-1 text-sm">npm run build</pre>
             </div>
             <div>
-              <h3 className="font-semibold">4. Set Up Environment</h3>
+              <h3 className="font-semibold">5. Set Up Environment</h3>
               <p className="text-sm">Copy <code>env.local</code> to <code>.env</code> and fill in the following variables:</p>
               <ul className="text-sm list-disc list-inside mt-1">
                 <li><code>APIFY_TOKEN</code> - Your Apify API token (get at <a href="https://console.apify.com/account/integrations" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 hover:text-blue-800">https://console.apify.com/account/integrations</a>)</li>
@@ -201,7 +207,7 @@ export const TriggerPipeline = ({ onSuccess }: TriggerPipelineProps) => {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold">5. Run the Local Scraper</h3>
+              <h3 className="font-semibold">6. Run the Local Scraper</h3>
               <pre className="bg-secondary p-2 rounded mt-1 text-sm">npm start &lt;instagram_post_url&gt; [max_items]</pre>
               <p className="text-sm mt-1">Example: <code>npm start https://www.instagram.com/p/ABC123/ 10</code></p>
             </div>
