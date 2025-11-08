@@ -190,7 +190,7 @@ serve(async (req) => {
               },
               { role: "user", content: prompt },
             ],
-            temperature: 0.7,
+            temperature: 1,
             max_tokens: 500,
           }),
         }
@@ -218,6 +218,23 @@ serve(async (req) => {
         console.error("Failed to parse OpenAI response:", analysisText);
         continue;
       }
+
+      // Update comment with analysis
+      const { error: updateError } = await supabase
+        .from("instagram_comments")
+        .update({
+          analysis,
+          analyzed_at: new Date().toISOString(),
+        })
+        .eq("id", insertedComment.id);
+
+      if (updateError) {
+        console.error("Update error:", updateError);
+        continue;
+      }
+
+      processedCount++;
+      console.log(`Successfully analyzed comment ${insertedComment.id}`);
 
     }
 
