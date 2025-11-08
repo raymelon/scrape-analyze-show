@@ -2,6 +2,30 @@
 
 A production-ready full-stack application that scrapes Instagram comments, analyzes them with AI, and displays insights in a beautiful dashboard.
 
+## Table of Contents
+
+- [Essential](#essential)
+  - [Live Demo](#live-demo)
+  - [Overview](#overview)
+  - [Tech Stack](#tech-stack)
+  - [Features](#features)
+  - [Setup Instructions](#setup-instructions)
+  - [Deploying Changes](#deploying-changes)
+  - [Local Workflow Alternative](#local-workflow-alternative)
+  - [Environment Variables](#environment-variables)
+  - [Usage](#usage)
+- [Architecture Deep Dive](#architecture-deep-dive)
+  - [Schema Reasoning](#schema-reasoning)
+  - [Workflow Explanation](#workflow-explanation)
+  - [Scaling Thought](#scaling-thought)
+  - [Failure Handling](#failure-handling)
+  - [Bonus (Optional)](#bonus-optional)
+- [Links](#links)
+- [License](#license)
+- [Contributing](#contributing)
+
+## Essential
+
 ## 🚀 Live Demo
 
 [View Live Application](#) <!-- Add your hosted URL here -->
@@ -71,9 +95,37 @@ The application:
    ```
 
 6. **Access the application**
-    ```
-    http://localhost:8080
-    ```
+     ```
+     http://localhost:8080
+     ```
+
+## 🚀 Deploying Changes
+
+### Edge Function Deployment
+
+When you modify the Supabase Edge Function (e.g., `supabase/functions/analyze-comments/index.ts`), deploy it using the Supabase CLI:
+
+1. **Install Supabase CLI** (if not already installed):
+   ```bash
+   npm install -g supabase
+   ```
+
+2. **Login to Supabase**:
+   ```bash
+   supabase login
+   ```
+
+3. **Link to your project** (if not already linked):
+   ```bash
+   supabase link --project-ref fngblryjjeixjvfaljpc
+   ```
+
+4. **Deploy the Edge Function**:
+   ```bash
+   supabase functions deploy analyze-comments
+   ```
+
+The function will be updated and available for use in production.
 
 ## 🏠 Local Workflow Alternative
 
@@ -97,6 +149,16 @@ Edge Function secrets (configured in Supabase dashboard):
 6. View analyzed comments in the dashboard with sentiment, keywords, and AI insights
 
 ## 📚 Architecture Deep Dive
+
+### Table of Contents
+
+- [Schema Reasoning](#schema-reasoning)
+- [Workflow Explanation](#workflow-explanation)
+- [Scaling Thought](#scaling-thought)
+- [Failure Handling](#failure-handling)
+- [Bonus (Optional)](#bonus-optional)
+
+---
 
 ### Schema Reasoning
 
