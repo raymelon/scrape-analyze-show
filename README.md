@@ -84,7 +84,7 @@ The application:
 
 3. **Configure Supabase**
 
-   - The project is already connected to Supabase (project ID: fngblryjjeixjvfaljpc)
+   - The project is already connected to Supabase (project ID: project-id)
    - Database schema is automatically created via migrations
 
 4. **Set up Edge Function secrets**
@@ -126,7 +126,7 @@ When you modify the Supabase Edge Function (e.g., `supabase/functions/analyze-co
 3. **Link to your project** (if not already linked):
 
    ```bash
-   supabase link --project-ref fngblryjjeixjvfaljpc
+   supabase link --project-ref project-id
    ```
 
 4. **Deploy the Edge Function**:
@@ -465,6 +465,7 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
 
 - **Strategy**: Exponential backoff + retry
 - **Implementation**:
+
   ```typescript
   async function callApifyWithRetry(url: string, maxRetries = 3) {
     for (let i = 0; i < maxRetries; i++) {
@@ -484,6 +485,7 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
     throw new Error("Max retries exceeded");
   }
   ```
+
 - **Why**: Rate limits are temporary; waiting and retrying usually succeeds
 
 **B. Network/Timeout Errors**
@@ -827,7 +829,7 @@ This provides ops teams with **immediate visibility** into pipeline health and e
 
 ## 🔗 Links
 
-- [Supabase Dashboard](https://supabase.com/dashboard/project/fngblryjjeixjvfaljpc)
+- [Supabase Dashboard](https://supabase.com/dashboard/project/[projectid])
 - [Apify Actor](https://apify.com/apidojo/instagram-comments-scraper)
 - [OpenAI Platform](https://platform.openai.com/)
 
