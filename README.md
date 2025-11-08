@@ -71,9 +71,13 @@ The application:
    ```
 
 6. **Access the application**
-   ```
-   http://localhost:8080
-   ```
+    ```
+    http://localhost:8080
+    ```
+
+## 🏠 Local Workflow Alternative
+
+If you're not on a paid Apify plan and want to run the comment analysis workflow locally without API costs, see the [Local Scraper Setup Guide](scripts/README.md) for instructions on using the CLI-based scraper that runs entirely on your machine.
 
 ## 🔑 Environment Variables
 
