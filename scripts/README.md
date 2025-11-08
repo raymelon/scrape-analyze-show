@@ -1,4 +1,4 @@
-# Local Instagram Comment Scraper
+# Local Instagram Comment Scraper Pipeline
 
 This script provides a free alternative to the Supabase Edge Function for users without Apify API access. It uses Apify CLI locally to scrape Instagram comments and analyze them with OpenAI.
 
@@ -24,7 +24,7 @@ This script provides a free alternative to the Supabase Edge Function for users 
    npm run build
    ```
 
-2. Copy `env.local` to `.env` and fill in your actual values:
+3. Copy `env.local` to `.env` and fill in your actual values:
 
    ```bash
    cp env.local .env
@@ -39,7 +39,7 @@ This script provides a free alternative to the Supabase Edge Function for users 
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_key
    ```
 
-3. Authenticate Apify CLI (optional, token is used):
+4. Authenticate Apify CLI (optional, token is used):
    ```bash
    apify login -t your_apify_token
    ```
