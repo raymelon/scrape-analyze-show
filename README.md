@@ -30,7 +30,7 @@ https://github.com/user-attachments/assets/faaae61f-9941-45fb-9719-9f25bb64a73e
 
 ## 🚀 Live Demo
 
-[View Live Application](#) <!-- Add your hosted URL here -->
+[View Live Application](https://scrape-analyze-show.vercel.app/)
 
 ## 📋 Overview
 
