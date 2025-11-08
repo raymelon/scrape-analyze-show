@@ -131,22 +131,77 @@ serve(async (req) => {
 
     // Process each comment
     for (const comment of comments) {
-      if (!comment.text) continue;
+      if (!comment.message) continue;
 
       try {
         // Insert raw comment
         const { data: insertedComment, error: insertError } = await supabase
           .from("instagram_comments")
           .insert({
-            source: comment.postUrl || postUrl,
-            content: comment.text,
-            created_at: comment.timestamp || new Date().toISOString(),
+            source: postUrl,
+            content: comment.message,
+            created_at: comment.createdAt || new Date().toISOString(),
           })
           .select()
           .single();
 
         if (insertError) {
           console.error("Insert error:", insertError);
+          continue;
+        }
+
+        console.log(`Analyzing comment ${insertedComment.id}...`);
+
+        // Call OpenAI for analysis
+        const prompt = ANALYSIS_PROMPT.replace(
+          "{TEXT_TO_ANALYZE}",
+          comment.message
+        );
+
+        const openaiResponse = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-5-mini",
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "You are a professional text analyst. Always respond with valid JSON only.",
+                },
+                { role: "user", content: prompt },
+              ],
+              temperature: 1,
+              max_completion_tokens: 500,
+            }),
+          }
+        );
+
+        if (!openaiResponse.ok) {
+          const errorText = await openaiResponse.text();
+          console.error("OpenAI error:", errorText);
+          continue;
+        }
+
+        const openaiData = await openaiResponse.json();
+        const analysisText = openaiData.choices[0]?.message?.content;
+
+        if (!analysisText || analysisText.trim() === '') {
+          console.error("OpenAI response is empty or undefined");
+          continue;
+        }
+
+        // Parse JSON response
+        let analysis;
+        try {
+          analysis = JSON.parse(analysisText);
+        } catch (parseError) {
+          console.error("Failed to parse OpenAI response:", analysisText);
           continue;
         }
 
