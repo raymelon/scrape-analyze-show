@@ -2,13 +2,20 @@
   "name": "local-scraper",
   "version": "1.0.0",
   "description": "Local Instagram comment scraper using Apify CLI",
-  "main": "local-scraper.js",
+  "main": "local-scraper.ts",
   "scripts": {
-    "start": "node local-scraper.js"
+    "build": "tsc",
+    "start": "node dist/local-scraper.js",
+    "dev": "ts-node local-scraper.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.80.0",
     "openai": "^4.0.0",
     "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
   }
 }

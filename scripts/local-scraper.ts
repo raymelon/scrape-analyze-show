@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
-const OpenAI = require('openai');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+import OpenAI from 'openai';
+import { ApifyComment, AnalysisResult } from '../src/types/instagram';
 
 // Load environment variables
 require('dotenv').config();
@@ -23,10 +24,10 @@ Comment to analyze: {TEXT_TO_ANALYZE}
 
 Return ONLY the JSON object, no additional text.`;
 
-async function main() {
+async function main(): Promise<void> {
   // Make main async for polling
-  const postUrl = process.argv[2];
-  const maxItems = parseInt(process.argv[3]) || 10;
+  const postUrl: string = process.argv[2];
+  const maxItems: number = parseInt(process.argv[3]) || 10;
 
   if (!postUrl) {
     console.error('Usage: node local-scraper.js <postUrl> [maxItems]');
@@ -34,10 +35,10 @@ async function main() {
   }
 
   // Check required env vars
-  const apifyToken = process.env.APIFY_TOKEN;
-  const openaiKey = process.env.OPENAI_API_KEY;
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const apifyToken: string | undefined = process.env.APIFY_TOKEN;
+  const openaiKey: string | undefined = process.env.OPENAI_API_KEY;
+  const supabaseUrl: string | undefined = process.env.SUPABASE_URL;
+  const supabaseKey: string | undefined = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!apifyToken || !openaiKey || !supabaseUrl || !supabaseKey) {
     console.error('Missing required environment variables. Copy env.local to .env and fill in your values.');
@@ -45,8 +46,8 @@ async function main() {
     process.exit(1);
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
-  const openai = new OpenAI({ apiKey: openaiKey });
+  const supabase = createClient(supabaseUrl!, supabaseKey!);
+  const openai = new OpenAI({ apiKey: openaiKey! });
 
   console.log('Starting Apify actor run...');
 
@@ -64,8 +65,8 @@ async function main() {
     const runCommand = `apify actors call apidojo/instagram-comments-scraper -f "${tempFile}" --json`;
     console.log('Running: apify actors call apidojo/instagram-comments-scraper -f [TEMP_FILE] --json');
 
-    const runOutput = execSync(runCommand, { encoding: 'utf8' });
-    const runResult = JSON.parse(runOutput);
+    const runOutput: string = execSync(runCommand, { encoding: 'utf8' });
+    const runResult: any = JSON.parse(runOutput);
 
     // Clean up temp file
     fs.unlinkSync(tempFile);
@@ -74,13 +75,13 @@ async function main() {
       throw new Error('Failed to get run ID from actor call');
     }
 
-    const runId = runResult.id;
+    const runId: string = runResult.id;
     console.log('Run ID:', runId);
 
     // Poll for completion
-    let status = 'RUNNING';
-    const maxPolls = 60; // 2 minutes max
-    let polls = 0;
+    let status: string = 'RUNNING';
+    const maxPolls: number = 60; // 2 minutes max
+    let polls: number = 0;
 
     while (status === 'RUNNING' && polls < maxPolls) {
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -97,16 +98,16 @@ async function main() {
     }
 
     // Fetch dataset items
-    const datasetId = runResult.defaultDatasetId;
-    const datasetCommand = `apify datasets get-items ${datasetId}`;
+    const datasetId: string = runResult.defaultDatasetId;
+    const datasetCommand: string = `apify datasets get-items ${datasetId}`;
     console.log('Fetching dataset...');
 
-    const datasetOutput = execSync(datasetCommand, { encoding: 'utf8' });
-    const comments = JSON.parse(datasetOutput);
+    const datasetOutput: string = execSync(datasetCommand, { encoding: 'utf8' });
+    const comments: ApifyComment[] = JSON.parse(datasetOutput);
 
     console.log(`Fetched ${comments.length} comments`);
 
-    let processedCount = 0;
+    let processedCount: number = 0;
 
     // Process each comment
     for (const comment of comments) {
@@ -159,11 +160,11 @@ async function main() {
         }
 
         // Parse JSON response
-        let analysis;
+        let analysis: AnalysisResult;
         try {
           analysis = JSON.parse(analysisText);
         } catch (parseError) {
-          console.error("JSON parse error:", parseError.message);
+          console.error("JSON parse error:", (parseError as Error).message);
           console.error("Response content:", analysisText);
           continue;
         }
@@ -198,7 +199,7 @@ async function main() {
     }
 
     // Mask sensitive information in error messages
-    let errorMsg = error.message;
+    let errorMsg = (error as Error).message;
     if (errorMsg.includes(apifyToken)) {
       errorMsg = errorMsg.replace(apifyToken, '[MASKED_TOKEN]');
     }

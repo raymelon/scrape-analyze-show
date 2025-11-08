@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.80.0";
+import { ApifyComment, AnalysisResult } from "../../src/types/instagram.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,21 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface ApifyComment {
-  id: string;
-  text: string;
-  timestamp: string;
-  ownerUsername: string;
-  postUrl?: string;
-}
 
-interface AnalysisResult {
-  sentiment: "positive" | "negative" | "neutral";
-  summary: string;
-  keywords: string[];
-  category: string;
-  confidence_score: number;
-}
 
 const ANALYSIS_PROMPT = `You are an expert text analyst. Analyze the following Instagram comment and return a structured JSON response with these exact fields:
 

@@ -18,6 +18,12 @@ This script provides a free alternative to the Supabase Edge Function for users 
    npm install
    ```
 
+2. Build the TypeScript code:
+
+   ```bash
+   npm run build
+   ```
+
 2. Copy `env.local` to `.env` and fill in your actual values:
 
    ```bash
@@ -40,8 +46,22 @@ This script provides a free alternative to the Supabase Edge Function for users 
 
 ## Usage
 
+After building, run the compiled JavaScript:
+
 ```bash
-node local-scraper.js <instagram_post_url> [max_items]
+npm start <instagram_post_url> [max_items]
+```
+
+Or run directly with ts-node (for development):
+
+```bash
+npm run dev <instagram_post_url> [max_items]
+```
+
+Example:
+
+```bash
+npm start https://www.instagram.com/p/DQuUVikiZQs/ 2
 ```
 
 Example:
