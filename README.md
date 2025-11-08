@@ -2,6 +2,15 @@
 
 A production-ready full-stack application that scrapes Instagram comments, analyzes them with AI, and displays insights in a beautiful dashboard.
 
+https://scrape-analyze-show.vercel.app/
+
+- [Architecture Deep Dive](#-architecture-deep-dive)
+  - [Schema Reasoning](#schema-reasoning)
+  - [Workflow Explanation](#workflow-explanation)
+  - [Scaling Thought](#scaling-thought)
+  - [Failure Handling](#failure-handling)
+  - [Bonus (Optional)](#bonus-optional)
+
 https://github.com/user-attachments/assets/faaae61f-9941-45fb-9719-9f25bb64a73e
 
 ## Table of Contents
