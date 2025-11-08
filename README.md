@@ -35,6 +35,7 @@ A production-ready full-stack application that scrapes Instagram comments, analy
 This project demonstrates a real-world SaaS workflow: **Apify → Supabase → OpenAI → UI**
 
 The application:
+
 1. Uses Apify to scrape Instagram post comments
 2. Stores raw data in Supabase PostgreSQL
 3. Analyzes each comment with OpenAI's GPT-4o-mini
@@ -45,7 +46,7 @@ The application:
 - **Frontend**: React, TypeScript, TanStack Query, Tailwind CSS
 - **Backend**: Supabase Edge Functions (Deno)
 - **Database**: Supabase PostgreSQL with Row Level Security
-- **APIs**: 
+- **APIs**:
   - Apify (apidojo/instagram-comments-scraper)
   - OpenAI (gpt-4o-mini)
 
@@ -69,35 +70,40 @@ The application:
 ### Local Development
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd scrape-analyze-show
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure Supabase**
+
    - The project is already connected to Supabase (project ID: fngblryjjeixjvfaljpc)
    - Database schema is automatically created via migrations
 
 4. **Set up Edge Function secrets**
-   
+
    Navigate to your Supabase project dashboard and add these secrets:
+
    - `APIFY_API_TOKEN`: Your Apify API token
    - `OPENAI_API_KEY`: Your OpenAI API key
 
 5. **Run the development server**
+
    ```bash
    npm run dev
    ```
 
 6. **Access the application**
-     ```
-     http://localhost:8080
-     ```
+   ```
+   http://localhost:8080
+   ```
 
 ## 🚀 Deploying Changes
 
@@ -106,16 +112,19 @@ The application:
 When you modify the Supabase Edge Function (e.g., `supabase/functions/analyze-comments/index.ts`), deploy it using the Supabase CLI:
 
 1. **Install Supabase CLI** (if not already installed):
+
    ```bash
    npm install -g supabase
    ```
 
 2. **Login to Supabase**:
+
    ```bash
    supabase login
    ```
 
 3. **Link to your project** (if not already linked):
+
    ```bash
    supabase link --project-ref fngblryjjeixjvfaljpc
    ```
@@ -134,6 +143,7 @@ If you're not on a paid Apify plan and want to run the comment analysis workflow
 ## 🔑 Environment Variables
 
 Edge Function secrets (configured in Supabase dashboard):
+
 - `APIFY_API_TOKEN` - Apify API authentication token
 - `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini
 - `SUPABASE_URL` - Auto-provided by Supabase
@@ -180,12 +190,14 @@ CREATE TABLE instagram_comments (
 **Key decisions:**
 
 1. **Single table vs. separate tables**: For this scale (< 100K records), a single table provides:
+
    - Simpler queries (no joins needed)
    - Easier maintenance
    - Faster development
    - Adequate performance with proper indexing
 
 2. **JSONB for analysis**: Storing structured AI results in JSONB offers:
+
    - Flexibility for evolving analysis schema
    - Native PostgreSQL JSONB querying capabilities
    - No schema migrations when adding new analysis fields
@@ -212,35 +224,41 @@ For this project's scope, simplicity and development speed were prioritized over
 The complete pipeline orchestrates four systems seamlessly:
 
 **1. User Interaction (UI → Edge Function)**
+
 - User enters Instagram post URL in React dashboard
 - Frontend calls Supabase Edge Function `analyze-comments` with post URL and maxItems
 - Edge Function runs server-side (Deno) to protect API keys
 
 **2. Data Collection (Edge Function → Apify)**
+
 - Edge Function calls Apify API to run `apidojo/instagram-comments-scraper` actor
 - Passes Instagram post URL to the actor
 - Polls Apify for run completion (every 2 seconds, max 60 attempts)
 - Retrieves scraped comments from the actor's dataset
 
 **3. Data Ingestion (Edge Function → Supabase)**
+
 - For each scraped comment:
   - Insert raw data into `instagram_comments` table
   - Extract: source URL, comment text, timestamp
   - Generate UUID as primary key
 
 **4. AI Analysis (Edge Function → OpenAI)**
+
 - For each inserted comment:
   - Format structured prompt with comment text
-  - Call OpenAI API (gpt-4o-mini) with analysis instructions
+  - Call OpenAI API (gpt-5-mini) with analysis instructions
   - Request JSON response with: sentiment, summary, keywords, category, confidence_score
   - Parse AI response
 
 **5. Result Storage (Edge Function → Supabase)**
+
 - Update each comment record with:
   - `analysis` (JSONB) - structured AI insights
   - `analyzed_at` (timestamp) - when analysis completed
 
 **6. Display (Supabase → UI)**
+
 - React dashboard queries `instagram_comments` table
 - Displays cards with:
   - Original comment text
@@ -251,6 +269,7 @@ The complete pipeline orchestrates four systems seamlessly:
 - System Health view aggregates metrics in real-time
 
 **Key characteristics:**
+
 - **Synchronous processing**: Each comment analyzed immediately after insertion
 - **Error isolation**: Individual comment failures don't halt the pipeline
 - **Server-side orchestration**: All sensitive operations happen in Edge Function
@@ -267,11 +286,13 @@ At 100K records/day (~70 records/minute), the current synchronous architecture w
 **Primary Bottlenecks:**
 
 1. **OpenAI API Rate Limits** (CRITICAL)
+
    - Current: Synchronous calls block pipeline
    - At scale: Would hit rate limits in seconds
    - Impact: Pipeline failures, timeout errors
 
 2. **Edge Function Timeout**
+
    - Current: Single function handles entire pipeline
    - At scale: Would exceed 60-second Supabase timeout
    - Impact: Incomplete processing, lost data
@@ -295,7 +316,7 @@ Edge Function: "ingest-comments"
     ├─ Insert raw comments → instagram_comments
     └─ Queue each comment → Supabase table as job queue
          OR use Supabase Realtime + Postgres NOTIFY
-    
+
 Background Worker: "analyze-worker"
     ├─ Poll job queue (or listen to NOTIFY)
     ├─ Process N jobs in parallel (rate-limit safe)
@@ -304,13 +325,16 @@ Background Worker: "analyze-worker"
 ```
 
 **Benefits:**
+
 - User gets immediate feedback (ingestion success)
 - Analysis happens asynchronously
 - Failures isolated to individual jobs
 - Natural rate limit compliance
 
 **Implementation:**
+
 1. Create `analysis_jobs` table:
+
    ```sql
    CREATE TABLE analysis_jobs (
      id UUID PRIMARY KEY,
@@ -331,6 +355,7 @@ Background Worker: "analyze-worker"
 **Phase 2: Database Optimization**
 
 1. **Normalize schema** (when JSONB queries slow):
+
    ```sql
    CREATE TABLE comments (
      id UUID PRIMARY KEY,
@@ -338,7 +363,7 @@ Background Worker: "analyze-worker"
      content TEXT,
      created_at TIMESTAMPTZ
    );
-   
+
    CREATE TABLE analyses (
      id UUID PRIMARY KEY,
      comment_id UUID REFERENCES comments,
@@ -349,7 +374,7 @@ Background Worker: "analyze-worker"
      confidence_score NUMERIC,
      analyzed_at TIMESTAMPTZ
    );
-   
+
    -- Indexes for efficient queries
    CREATE INDEX idx_comments_source ON comments(source);
    CREATE INDEX idx_analyses_sentiment ON analyses(sentiment);
@@ -357,11 +382,12 @@ Background Worker: "analyze-worker"
    ```
 
 2. **Partitioning** by date for time-series data:
+
    ```sql
    CREATE TABLE comments (
      ...
    ) PARTITION BY RANGE (created_at);
-   
+
    CREATE TABLE comments_2024_01 PARTITION OF comments
      FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
    ```
@@ -369,11 +395,13 @@ Background Worker: "analyze-worker"
 **Phase 3: API Optimization**
 
 1. **OpenAI Batch API**:
+
    - Submit up to 50,000 requests in a single batch
    - 50% cost reduction
    - 24-hour processing window acceptable for analytics
 
 2. **Response caching**:
+
    - Cache identical comment texts (detect with hash)
    - Reduces redundant API calls
 
@@ -384,13 +412,15 @@ Background Worker: "analyze-worker"
 **Phase 4: Infrastructure**
 
 1. **Connection pooling**:
+
    ```typescript
    const supabase = createClient(url, key, {
-     db: { poolSize: 20 }
+     db: { poolSize: 20 },
    });
    ```
 
 2. **Horizontal scaling**:
+
    - Deploy multiple worker instances
    - Use Supabase `SELECT ... FOR UPDATE SKIP LOCKED` for job distribution
    - Prevents job duplication
@@ -403,17 +433,20 @@ Background Worker: "analyze-worker"
 **Phase 5: Cost Optimization**
 
 At 100K/day:
+
 - OpenAI cost: ~$50-100/day (gpt-4o-mini)
 - Supabase compute: Upgrade to Pro ($25/mo)
 - Apify cost: Depends on actor pricing
 
 **Optimization tactics:**
+
 - Batch OpenAI requests
 - Use cheaper models where appropriate
 - Implement analysis caching
 - Sample data (analyze subset, extrapolate insights)
 
 **Expected Performance:**
+
 - Phase 1: Handle 100K/day
 - Phase 2: Handle 1M/day
 - Phase 3+: Handle 10M/day
@@ -429,40 +462,45 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
 **1. Apify API Failures**
 
 **A. Rate Limits (429 responses)**
+
 - **Strategy**: Exponential backoff + retry
 - **Implementation**:
   ```typescript
   async function callApifyWithRetry(url: string, maxRetries = 3) {
     for (let i = 0; i < maxRetries; i++) {
       const response = await fetch(url);
-      
+
       if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After');
-        const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, i) * 1000;
+        const retryAfter = response.headers.get("Retry-After");
+        const waitTime = retryAfter
+          ? parseInt(retryAfter) * 1000
+          : Math.pow(2, i) * 1000;
         await sleep(waitTime);
         continue;
       }
-      
+
       return response;
     }
-    throw new Error('Max retries exceeded');
+    throw new Error("Max retries exceeded");
   }
   ```
 - **Why**: Rate limits are temporary; waiting and retrying usually succeeds
 
 **B. Network/Timeout Errors**
+
 - **Strategy**: Retry 3 times with exponential backoff
 - **Implementation**: Same as above
 - **Why**: Transient network issues resolve quickly
 
 **C. Actor Run Failures (actor crashes, invalid input)**
+
 - **Strategy**: Log error, alert, return failure to user
 - **Implementation**:
   ```typescript
-  if (runStatus === 'FAILED') {
-    console.error('Apify actor failed:', runDetails);
-    await sendAlert('Apify actor failure', runDetails);
-    throw new Error('Actor run failed - check input URL');
+  if (runStatus === "FAILED") {
+    console.error("Apify actor failed:", runDetails);
+    await sendAlert("Apify actor failure", runDetails);
+    throw new Error("Actor run failed - check input URL");
   }
   ```
 - **Why**: User input errors need immediate feedback; actor bugs need dev attention
@@ -470,12 +508,14 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
 **2. OpenAI API Failures**
 
 **A. Rate Limits (429)**
+
 - **Strategy**: Queue-based processing with rate limiter
 - **Implementation**:
+
   ```typescript
   const RATE_LIMIT = 10; // requests per second
   const queue = new PQueue({ concurrency: RATE_LIMIT, interval: 1000 });
-  
+
   for (const comment of comments) {
     await queue.add(async () => {
       const analysis = await callOpenAI(comment.content);
@@ -483,9 +523,11 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
     });
   }
   ```
+
 - **Why**: Prevents overwhelming API; gracefully handles limits
 
 **B. Temporary Errors (5xx, network issues)**
+
 - **Strategy**: Retry with exponential backoff (max 5 attempts)
 - **Implementation**:
   ```typescript
@@ -507,6 +549,7 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
 - **Why**: Server errors are usually transient
 
 **C. Malformed Responses (invalid JSON)**
+
 - **Strategy**: Log, mark job as failed, continue processing others
 - **Implementation**:
   ```typescript
@@ -514,29 +557,36 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
     const analysis = JSON.parse(openaiResponse);
     // Validate required fields
     if (!analysis.sentiment || !analysis.summary) {
-      throw new Error('Missing required fields');
+      throw new Error("Missing required fields");
     }
   } catch (parseError) {
-    console.error('Invalid OpenAI response:', openaiResponse);
-    await supabase.from('analysis_jobs').update({
-      status: 'failed',
-      error: 'Malformed AI response',
-      attempts: attempts + 1
-    }).eq('id', jobId);
+    console.error("Invalid OpenAI response:", openaiResponse);
+    await supabase
+      .from("analysis_jobs")
+      .update({
+        status: "failed",
+        error: "Malformed AI response",
+        attempts: attempts + 1,
+      })
+      .eq("id", jobId);
     continue; // Don't block other jobs
   }
   ```
 - **Why**: One bad response shouldn't halt entire pipeline
 
 **D. Content Policy Violations (400 errors)**
+
 - **Strategy**: Skip, log, no retry
 - **Implementation**:
   ```typescript
-  if (error.status === 400 && error.message.includes('content_policy')) {
-    console.warn('Content policy violation:', comment.id);
-    await supabase.from('instagram_comments').update({
-      analysis: { error: 'Content policy violation' }
-    }).eq('id', comment.id);
+  if (error.status === 400 && error.message.includes("content_policy")) {
+    console.warn("Content policy violation:", comment.id);
+    await supabase
+      .from("instagram_comments")
+      .update({
+        analysis: { error: "Content policy violation" },
+      })
+      .eq("id", comment.id);
     return; // Don't retry
   }
   ```
@@ -545,17 +595,20 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
 **3. Database Failures**
 
 **Supabase Connection Errors**
+
 - **Strategy**: Retry 3 times, then fail
 - **Implementation**: Built-in Supabase client retries
 - **Why**: Connection issues are usually brief
 
 **Constraint Violations**
+
 - **Strategy**: Skip duplicate, log, continue
 - **Implementation**:
   ```typescript
-  const { error } = await supabase.from('comments').insert(data);
-  if (error?.code === '23505') { // Unique violation
-    console.warn('Duplicate comment:', data.id);
+  const { error } = await supabase.from("comments").insert(data);
+  if (error?.code === "23505") {
+    // Unique violation
+    console.warn("Duplicate comment:", data.id);
     return; // Already processed
   }
   ```
@@ -563,37 +616,41 @@ I implement a **multi-layered strategy** combining retries, queuing, and alertin
 **4. Job Queue System (After Scaling)**
 
 **Dead Letter Queue (DLQ)**
+
 - Jobs that fail 5+ times → move to DLQ
 - Manual review or automated cleanup
 - Implementation:
   ```typescript
   if (job.attempts > 5) {
-    await supabase.from('analysis_jobs_dlq').insert(job);
-    await supabase.from('analysis_jobs').delete().eq('id', job.id);
+    await supabase.from("analysis_jobs_dlq").insert(job);
+    await supabase.from("analysis_jobs").delete().eq("id", job.id);
   }
   ```
 
 **5. Monitoring & Alerting**
 
 **Critical Alerts** (Immediate notification):
+
 - Apify actor fails 3+ times in 10 minutes
 - OpenAI error rate > 10% for 5 minutes
 - Database connection failures
 - Queue backlog > 5000 jobs
 
 **Warning Alerts** (Email/Slack):
+
 - DLQ has > 100 jobs
 - Analysis success rate < 95%
 - Average processing time > 60 seconds
 
 **Implementation**:
+
 ```typescript
 // Pseudocode
 if (errorRate > 0.1) {
   await sendPagerDutyAlert({
-    severity: 'critical',
-    message: 'OpenAI error rate exceeds 10%',
-    metrics: { errorRate, failedJobs, successRate }
+    severity: "critical",
+    message: "OpenAI error rate exceeds 10%",
+    metrics: { errorRate, failedJobs, successRate },
   });
 }
 ```
@@ -607,6 +664,7 @@ if (errorRate > 0.1) {
 5. **Cost Efficiency**: Retry limits prevent infinite loops
 
 **Trade-offs:**
+
 - **Complexity**: More code to maintain
 - **Latency**: Retries increase processing time
 - **Cost**: Failed retries still count toward API quotas
@@ -618,6 +676,7 @@ For production, this is the right balance between reliability and complexity.
 ### Bonus (Optional)
 
 **Add a "System Health" view or route that shows:**
+
 - **Total number of analyzed records**
 - **Timestamp of the last successful OpenAI call**
 
@@ -635,8 +694,9 @@ The System Health dashboard is accessible via the "System Health" tab and displa
 4. **Last Analysis Timestamp**: When the most recent analysis completed
 
 **Health Status Indicator:**
+
 - 🟢 **Healthy** (green): Last analysis < 5 minutes ago
-- 🟡 **Warning** (yellow): Last analysis 5-30 minutes ago  
+- 🟡 **Warning** (yellow): Last analysis 5-30 minutes ago
 - 🔴 **Inactive** (red): Last analysis > 30 minutes ago
 - ⚪ **No Data** (gray): No analyses exist
 
@@ -645,6 +705,7 @@ The System Health dashboard is accessible via the "System Health" tab and displa
 This data enables several monitoring strategies:
 
 **1. Synthetic Monitoring**
+
 ```bash
 # Curl script to check health endpoint
 curl https://your-app.com/api/health
@@ -661,6 +722,7 @@ Response:
 ```
 
 **Alert triggers:**
+
 - `time_since_last > 1800` (30 min) → Pipeline stalled
 - `success_rate < 95` → High failure rate
 - `analyzed_count == 0` → OpenAI API down
@@ -669,45 +731,51 @@ Response:
 **2. Application Monitoring Integration**
 
 With DataDog/New Relic:
+
 ```typescript
 // Track as custom metrics
-datadog.gauge('pipeline.success_rate', successRate);
-datadog.gauge('pipeline.seconds_since_last_analysis', timeSinceLast);
-datadog.increment('pipeline.records_analyzed');
+datadog.gauge("pipeline.success_rate", successRate);
+datadog.gauge("pipeline.seconds_since_last_analysis", timeSinceLast);
+datadog.increment("pipeline.records_analyzed");
 ```
 
 **Alert rules:**
+
 - `pipeline.seconds_since_last_analysis > 1800` for 5 minutes
 - `pipeline.success_rate < 95` for 10 minutes
 
 **3. Status Page**
 
 Expose health data on public status page:
+
 ```
 ✅ Analysis Pipeline: Operational
    Last processed: 2 minutes ago
    Success rate (24h): 99.2%
 
-✅ Data Collection: Operational  
+✅ Data Collection: Operational
    Records today: 1,234
 ```
 
 **4. Slack Alerts**
 
 Webhook integration:
+
 ```typescript
 if (timeSinceLast > 1800) {
   await fetch(SLACK_WEBHOOK, {
     body: JSON.stringify({
-      text: '🚨 Analysis pipeline inactive for 30+ minutes',
-      attachments: [{
-        color: 'danger',
-        fields: [
-          { title: 'Last Analysis', value: lastAnalysisTime },
-          { title: 'Pending', value: pendingCount }
-        ]
-      }]
-    })
+      text: "🚨 Analysis pipeline inactive for 30+ minutes",
+      attachments: [
+        {
+          color: "danger",
+          fields: [
+            { title: "Last Analysis", value: lastAnalysisTime },
+            { title: "Pending", value: pendingCount },
+          ],
+        },
+      ],
+    }),
   });
 }
 ```
@@ -715,6 +783,7 @@ if (timeSinceLast > 1800) {
 **5. SLA Tracking**
 
 Calculate uptime from health data:
+
 ```typescript
 // Query last 24 hours of health checks
 const uptime = (healthyChecks / totalChecks) * 100;
@@ -730,7 +799,7 @@ const uptime = (healthyChecks / totalChecks) * 100;
 
 **Real-World Example:**
 
-*Scenario*: At 3:47 AM, OpenAI API goes down.
+_Scenario_: At 3:47 AM, OpenAI API goes down.
 
 1. **T+0 min**: Last successful analysis timestamp freezes
 2. **T+5 min**: Status indicator turns yellow (warning)
@@ -741,8 +810,9 @@ const uptime = (healthyChecks / totalChecks) * 100;
 7. **T+47 min**: Last analysis timestamp updates, status returns to green
 
 **Monitoring Dashboard Query:**
+
 ```sql
-SELECT 
+SELECT
   COUNT(*) as total_records,
   COUNT(*) FILTER (WHERE analysis IS NOT NULL) as analyzed,
   MAX(analyzed_at) as last_analysis,
