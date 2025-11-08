@@ -24,7 +24,6 @@ https://github.com/user-attachments/assets/faaae61f-9941-45fb-9719-9f25bb64a73e
 
 <img width="2209" height="887" alt="supabase-screenshot-analysis-non-english" src="https://github.com/user-attachments/assets/520f8d12-1614-4c27-b3ad-286580b58377" />
 
-
 ## Table of Contents
 
 - [Essential](#essential)
@@ -61,7 +60,7 @@ The application:
 
 1. Uses Apify to scrape Instagram post comments
 2. Stores raw data in Supabase PostgreSQL
-3. Analyzes each comment with OpenAI's GPT-4o-mini
+3. Analyzes each comment with OpenAI's GPT-5-mini
 4. Displays results in a modern React dashboard with system health monitoring
 
 ## 🏗️ Tech Stack
@@ -71,7 +70,7 @@ The application:
 - **Database**: Supabase PostgreSQL with Row Level Security
 - **APIs**:
   - Apify (apidojo/instagram-comments-scraper)
-  - OpenAI (gpt-4o-mini)
+  - OpenAI (gpt-5-mini)
 
 ## 📊 Features
 
@@ -168,7 +167,7 @@ If you're not on a paid Apify plan and want to run the comment analysis workflow
 Edge Function secrets (configured in Supabase dashboard):
 
 - `APIFY_API_TOKEN` - Apify API authentication token
-- `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini
+- `OPENAI_API_KEY` - OpenAI API key for GPT-5-mini
 - `SUPABASE_URL` - Auto-provided by Supabase
 - `SUPABASE_SERVICE_ROLE_KEY` - Auto-provided by Supabase
 
@@ -429,8 +428,8 @@ Background Worker: "analyze-worker"
    - Reduces redundant API calls
 
 3. **Model selection**:
-   - Use `gpt-4o-mini` for speed and cost
-   - Consider `gpt-4o-nano` for even faster processing if quality acceptable
+   - Use `gpt-5-mini` for speed and cost
+   - Consider `gpt-5-nano` for even faster processing if quality acceptable
 
 **Phase 4: Infrastructure**
 
@@ -457,7 +456,7 @@ Background Worker: "analyze-worker"
 
 At 100K/day:
 
-- OpenAI cost: ~$50-100/day (gpt-4o-mini)
+- OpenAI cost: ~$5-10/day (gpt-5-mini)
 - Supabase compute: Upgrade to Pro ($25/mo)
 - Apify cost: Depends on actor pricing
 

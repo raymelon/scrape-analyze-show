@@ -74,7 +74,7 @@ node local-scraper.js https://www.instagram.com/p/ABC123/ 20
 
 1. Runs the `apidojo/instagram-comments-scraper` actor via Apify CLI
 2. Waits for completion and fetches the dataset
-3. Analyzes each comment using OpenAI GPT-4o-mini
+3. Analyzes each comment using OpenAI GPT-5-mini
 4. Stores results in Supabase (same tables as the Edge Function)
 
 ## Notes
