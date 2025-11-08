@@ -13,6 +13,18 @@ A production-ready full-stack application that scrapes Instagram comments, analy
 
 https://github.com/user-attachments/assets/faaae61f-9941-45fb-9719-9f25bb64a73e
 
+## Supabase Screenshots
+
+- Supabase table(s) containing the stored and analyzed data
+- One screenshot demonstrating OpenAI analysis results saved in the database.
+
+<img width="1815" height="754" alt="supabase-screenshot" src="https://github.com/user-attachments/assets/3f178005-fe7b-4757-8a78-b834cc8cd59a" />
+
+<img width="2211" height="875" alt="supabase-screenshot-analysis" src="https://github.com/user-attachments/assets/b6c06d49-7d4e-45c8-a72e-f9f2da52ec8f" />
+
+<img width="2209" height="887" alt="supabase-screenshot-analysis-non-english" src="https://github.com/user-attachments/assets/520f8d12-1614-4c27-b3ad-286580b58377" />
+
+
 ## Table of Contents
 
 - [Essential](#essential)
