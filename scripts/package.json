@@ -1,0 +1,14 @@
+{
+  "name": "local-scraper",
+  "version": "1.0.0",
+  "description": "Local Instagram comment scraper using Apify CLI",
+  "main": "local-scraper.js",
+  "scripts": {
+    "start": "node local-scraper.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.80.0",
+    "openai": "^4.0.0",
+    "dotenv": "^16.0.0"
+  }
+}
